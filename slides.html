@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Andreas Linz—klingt.net">
+  <title>Go Module Proxy</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://revealjs.com/css/reset.css">
+  <link rel="stylesheet" href="https://revealjs.com/css/reveal.css">
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://revealjs.com/css/theme/white.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'https://revealjs.com/css/print/pdf.css' : 'https://revealjs.com/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="https://revealjs.com/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Go Module Proxy</h1>
+  <p class="subtitle">Internals and pitfalls to consider when developing one yourself</p>
+  <p class="author">Andreas Linz—klingt.net</p>
+  <p class="date">2019-11-14T19+01:00</p>
+</section>
+
+<section id="a-short-history" class="slide level1">
+<h1>A short History</h1>
+</section>
+<section id="gopathsrc" class="slide level1">
+<h1><code>$GOPATH/src</code></h1>
+<ul>
+<li><strong>no version management everything was “latest”</strong></li>
+</ul>
+</section>
+<section id="go15vendorexperimenton" class="slide level1">
+<h1><code>GO15VENDOREXPERIMENT=on</code></h1>
+<ul>
+<li><a href="https://go.googlesource.com/proposal/+/master/design/25719-go15vendor.md">Go 1.5</a> introduced experimental <code>/vendor</code> support</li>
+<li><code>/vendor</code> supplies manual managed dependencies</li>
+<li><strong>dependencies need to be part of the repository</strong></li>
+<li>(nobody likes to work with git submodules, <code>git clone --recursive ...</code>)</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h3 id="go-2017-survey-resultsgo2017survey"><a href="https://blog.golang.org/survey2017-results">Go 2017 Survey Results</a>:</h3>
+<p>When asked about the biggest challenges to their own personal use of Go, users clearly conveyed that <strong>lack of dependency management</strong>…</p>
+</section>
+<section class="slide level1">
+
+<h3 id="go-2018-survey-resultsgo2018survey"><a href="https://blog.golang.org/survey2018-results">Go 2018 Survey Results</a>:</h3>
+<p>The top three major challenges we identified are:</p>
+<p><strong>Package management</strong> (e.g., “Keeping up with vendoring”, “dependency / packet [sic] management / vendoring not unified”) …</p>
+</section>
+<section id="section" class="slide level1">
+<h1>🤔</h1>
+</section>
+<section id="era-of-package-managers" class="slide level1">
+<h1>Era of Package Managers</h1>
+</section>
+<section class="slide level1">
+
+<div>
+<ul>
+<li class="fragment">godm</li>
+<li class="fragment">gv</li>
+<li class="fragment">gom</li>
+<li class="fragment">Godep</li>
+<li class="fragment">Glide</li>
+<li class="fragment">dep 🦥</li>
+<li class="fragment">…</li>
+</ul>
+</div>
+<p><a href="https://github.com/golang/go/wiki/PackageManagementTools">list of package managers</a></p>
+</section>
+<section class="slide level1">
+
+<ul>
+<li>many Go developers were unhappy with package management</li>
+<li>no official solution, only more or less stable external tools</li>
+<li>you still needed to work inside the <code>$GOPATH</code> (or use “clever” hacks)</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<p><a href="https://dave.cheney.net/2016/12/20/thinking-about-gopath">Dave Cheney</a> said in 2016:</p>
+<p>In my experience, many newcomers to Go are <strong>frustrated with the single workspace $GOPATH model.</strong></p>
+<p>With the end of 2016 a <a href="https://github.com/golang/go/issues/17262">default <code>GOPATH</code></a> is set (<code>~/go</code>).</p>
+</section>
+<section id="go111moduleson" class="slide level1">
+<h1>GO111MODULES=on</h1>
+</section>
+<section class="slide level1">
+
+<div>
+<ul>
+<li class="fragment">mid of 2018 <a href="https://blog.golang.org/go1.11">Go 1.11</a> introduced experimental support for the new <em>modules</em> format (<code>vgo</code>)</li>
+<li class="fragment"><a href="https://github.com/golang/go/issues/24476">vgo was pretty unstable</a></li>
+<li class="fragment"><strong>module</strong>: collection of related Go packages that are versioned together as single unit</li>
+<li class="fragment">precise dependency requirements → <strong>reproducible builds</strong></li>
+<li class="fragment">finalized with the next release, i.e. Go 1.14</li>
+</ul>
+</div>
+<p><a href="https://github.com/golang/go/issues/34953">Modules documentation</a></p>
+</section>
+<section id="modules" class="slide level1">
+<h1>Modules?</h1>
+<ul>
+<li>a repository contains one or more modules</li>
+<li>a module contains one or more packages</li>
+<li>package is a single directory of <code>.go</code> files</li>
+</ul>
+</section>
+<section id="how-to-setup-a-modules-project" class="slide level1">
+<h1>How to Setup a Modules Project?</h1>
+</section>
+<section class="slide level1">
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a>$ <span class="ex">go</span> mod init github.com/example/project</span></code></pre></div>
+<ul>
+<li>migrates existing dependency definitions if present (e.g. <code>Gopkt.toml</code>)</li>
+<li>creates <code>go.mod</code> and <code>go.sum</code> files</li>
+</ul>
+<p>Commit both but never edit them manually!</p>
+<p>(<code>go get</code> and friends will do this for you)</p>
+</section>
+<section id="add-dependency-in-specific-version" class="slide level1">
+<h1>Add Dependency in Specific Version</h1>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a>$ <span class="ex">go</span> get github.com/example/project@v1.2.3</span></code></pre></div>
+<ul>
+<li>the version can be a git reference as well (hash/branch…)</li>
+</ul>
+</section>
+<section id="go-modules-proxy" class="slide level1">
+<h1>Go Modules Proxy</h1>
+<ul>
+<li>introduced with Go 1.13</li>
+<li>default one is <a href="https://proxy.golang.org">proxy.golang.org</a> (not open-source)</li>
+<li>package hashsums (<code>go.sum</code>) are checked by default against <a href="https://sum.golang.org.">sum.golang.org</a></li>
+</ul>
+</section>
+<section id="section-1" class="slide level1">
+<h1>🕵️</h1>
+<ul>
+<li>potential information leak</li>
+<li>set <code>GOPRIVATE=my.secret.git.com[,…]</code> for private repositories</li>
+</ul>
+</section>
+<section id="advantages-of-using-a-proxy" class="slide level1">
+<h1>Advantages of Using a Proxy</h1>
+<div>
+<ul>
+<li class="fragment">faster builds (less stress on the git server)</li>
+<li class="fragment">persistent depencies (if upstream is down)</li>
+<li class="fragment">reproducible builds (no <code>git push -f</code>)</li>
+</ul>
+</div>
+</section>
+<section id="proxy-implementations" class="slide level1">
+<h1>Proxy Implementations</h1>
+<ul>
+<li><a href="https://gocenter.io/">gocenter.io</a> (JFrog, commercial)</li>
+<li><a href="https://goproxy.cn/">goproxy.cn</a> (open source, trustworthy!?)</li>
+<li><a href="https://github.com/gomods/athens">Athens</a> (open source, pretty mature, Microsoft)</li>
+<li>…</li>
+</ul>
+</section>
+<section id="write-ony-yourself" class="slide level1">
+<h1>Write ony Yourself?</h1>
+<ul>
+<li>learn about modules</li>
+<li>get to know the module proxy API</li>
+<li><strong>simpler access to private repositories</strong></li>
+</ul>
+</section>
+<section id="private-repositories" class="slide level1">
+<h1>Private Repositories</h1>
+<ul>
+<li><code>go get</code> knows nothing about authentication</li>
+<li>common solution HTTPS to SSH rewrite:</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a>$ <span class="fu">git</span> config --global url.<span class="st">&quot;git@git.company.com:&quot;</span>.insteadOf https://git.company.com/</span></code></pre></div>
+</section>
+<section id="module-proxy-api" class="slide level1">
+<h1>Module Proxy API</h1>
+<ul>
+<li><code>go help goproxy</code></li>
+<li>only <code>GET</code> resources</li>
+</ul>
+</section>
+<section class="slide level1">
+
+<h3 id="goproxymodulevlist"><code>$GOPROXY/&lt;module&gt;/@v/list</code></h3>
+<ul>
+<li>list of known versions</li>
+<li>line by line</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a>$ <span class="ex">curl</span> <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/list&#39;</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="ex">v1.3.0</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="ex">v1.7.0</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="ex">v1.6.0</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>…</span></code></pre></div>
+</section>
+<section class="slide level1">
+
+<h4 id="goproxymodulevversion.info"><code>$GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.info</code></h4>
+<ul>
+<li>returns version details mod time</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a>$ <span class="ex">curl</span> <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.info&#39;</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="dt">{&quot;Version&quot;:&quot;v1.7.0&quot;,&quot;Time&quot;:&quot;2019-01-25T16:05:53Z&quot;}</span></span></code></pre></div>
+</section>
+<section class="slide level1">
+
+<h4 id="goproxymodulevversion.mod"><code>$GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.mod</code></h4>
+<ul>
+<li>the module’s <code>go.mod</code> file</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">curl</span> -s <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.mod&#39;</span> <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="ex">module</span> github.com/gorilla/mux</span></code></pre></div>
+</section>
+<section class="slide level1">
+
+<h4 id="goproxymodulevversion.zip"><code>$GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.zip</code></h4>
+<ul>
+<li>zip archive of the module at <code>&lt;version&gt;</code></li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a>$ <span class="ex">curl</span> -s <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.zip&#39;</span> <span class="kw">|</span> <span class="ex">bsdtar</span> --list -zf- <span class="kw">|</span> <span class="fu">head</span> -n10</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.github/release-drafter.yml</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.github/stale.yml</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.travis.yml</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="ex">github.com/gorilla/mux@v1.7.0/AUTHORS</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="ex">github.com/gorilla/mux@v1.7.0/ISSUE_TEMPLATE.md</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a><span class="ex">github.com/gorilla/mux@v1.7.0/LICENSE</span></span>
+<span id="cb7-8"><a href="#cb7-8"></a><span class="ex">github.com/gorilla/mux@v1.7.0/README.md</span></span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="ex">github.com/gorilla/mux@v1.7.0/bench_test.go</span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="ex">github.com/gorilla/mux@v1.7.0/context.go</span></span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="ex">github.com/gorilla/mux@v1.7.0/context_test.go</span></span>
+<span id="cb7-12"><a href="#cb7-12"></a>…</span></code></pre></div>
+</section>
+<section id="the-zip-archive" class="slide level1">
+<h1>The Zip Archive</h1>
+<ul>
+<li><a href="https://github.com/golang/go/issues/34953">is pretty special</a></li>
+<li>it contains no metadata:
+<ul>
+<li>modification timestamps are DOS zero time (1979-11-30)</li>
+<li>everything has <code>0644</code> permissions</li>
+</ul></li>
+</ul>
+</section>
+<section id="you-should-not-zip-them-yourself" class="slide level1">
+<h1>You Should not Zip them Yourself</h1>
+<ul>
+<li>very hard to reproduce</li>
+<li>only achieved archives with equal byte length (compared to proxy.golang.org)</li>
+<li>hashums were still different (official zips used weird file metadata)</li>
+</ul>
+</section>
+<section id="but" class="slide level1">
+<h1>But…</h1>
+<ul>
+<li>thanks to <a href="https://github.com/golang/go/issues/34953">!34953</a> we now have a library <a href="https://godoc.org/golang.org/x/mod/zip">golang.org/x/mod/zip</a> 🎉</li>
+<li>downside: the API does not work on streams, requires a folder of files</li>
+<li>alternative: <a href="https://github.com/gomods/athens/pull/1414">Athens</a> will be using <a href="https://github.com/plexsystems/pacmod">pacmod</a></li>
+</ul>
+</section>
+<section id="so" class="slide level1">
+<h1>So…</h1>
+<h2 id="should-i-write-one-myself">Should I Write one Myself?</h2>
+<div>
+<ul>
+<li class="fragment">Yes!</li>
+<li class="fragment">and No!</li>
+</ul>
+</div>
+</section>
+<section id="questions" class="slide level1">
+<h1>Questions?</h1>
+</section>
+    </div>
+  </div>
+
+  <script src="https://revealjs.com/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Transition style
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'https://revealjs.com/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'https://revealjs.com/plugin/zoom-js/zoom.js', async: true },
+          { src: 'https://revealjs.com/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
