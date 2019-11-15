@@ -100,7 +100,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <section id="title-slide">
   <h1 class="title">Go Module Proxy</h1>
-  <p class="subtitle">Internals and pitfalls to consider when developing one yourself</p>
+  <p class="subtitle">Internals and Pitfalls</p>
   <p class="author">Andreas Linz—klingt.net</p>
   <p class="date">2019-11-14T19+01:00</p>
 </section>
@@ -117,7 +117,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="go15vendorexperimenton" class="slide level1">
 <h1><code>GO15VENDOREXPERIMENT=on</code></h1>
 <ul>
-<li><a href="https://go.googlesource.com/proposal/+/master/design/25719-go15vendor.md">Go 1.5</a> introduced experimental <code>/vendor</code> support</li>
+<li>In mid of 2015 <a href="https://go.googlesource.com/proposal/+/master/design/25719-go15vendor.md">Go 1.5</a> introduced experimental <code>/vendor</code> support</li>
 <li><code>/vendor</code> supplies manual managed dependencies</li>
 <li><strong>dependencies need to be part of the repository</strong></li>
 <li>(nobody likes to work with git submodules, <code>git clone --recursive ...</code>)</li>
@@ -131,7 +131,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section class="slide level1">
 
 <h3 id="go-2018-survey-resultsgo2018survey"><a href="https://blog.golang.org/survey2018-results">Go 2018 Survey Results</a>:</h3>
-<p>The top three major challenges we identified are:</p>
+<p>[One of] The top three major challenges we identified are:</p>
 <p><strong>Package management</strong> (e.g., “Keeping up with vendoring”, “dependency / packet [sic] management / vendoring not unified”) …</p>
 </section>
 <section id="section" class="slide level1" data-background-video="https://media.giphy.com/media/2H67VmB5UEBmU/giphy.mp4" data-background-video-loop="loop" data-background-opacity="0.31415">
@@ -159,7 +159,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <ul>
 <li>many Go developers were unhappy with package management</li>
-<li>no official solution, only more or less stable external tools</li>
+<li>no official solution, only more or less stable third-party package management tools</li>
 <li>you still needed to work inside the <code>$GOPATH</code> (or use “clever” hacks)</li>
 </ul>
 </section>
@@ -172,21 +172,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="go111moduleson" class="slide level1" data-background-image="https://images.unsplash.com/photo-1517373116369-9bdb8cdc9f62?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1950&amp;q=80" data-background-opacity="0.31415">
 <h1>GO111MODULES=on</h1>
 </section>
-<section class="slide level1">
-
-<div>
+<section id="whats-a-module" class="slide level1">
+<h1>What’s a Module?</h1>
 <ul>
-<li class="fragment">mid of 2018 <a href="https://blog.golang.org/go1.11">Go 1.11</a> introduced experimental support for the new <em>modules</em> format (<code>vgo</code>)</li>
-<li class="fragment"><a href="https://github.com/golang/go/issues/24476">vgo was pretty unstable</a></li>
-<li class="fragment"><strong>module</strong>: collection of related Go packages that are versioned together as single unit</li>
-<li class="fragment">precise dependency requirements → <strong>reproducible builds</strong></li>
-<li class="fragment">finalized with the next release, i.e. Go 1.14</li>
+<li><strong>module</strong>: collection of related Go packages that are versioned together as single unit</li>
+<li>e.g. a simple webserver using <code>net/http</code> from Go 1.1x with <code>gorilla/mux</code> as router is a collection of packages</li>
+<li>modules add precise dependency requirements (<code>go.mod</code>) → <strong>reproducible builds</strong></li>
+<li>support will be finalized with Go 1.14</li>
 </ul>
-</div>
 <p><a href="https://github.com/golang/go/issues/34953">Modules documentation</a></p>
 </section>
-<section id="modules" class="slide level1">
-<h1>Modules?</h1>
+<section id="vgo" class="slide level1">
+<h1><code>vgo</code></h1>
+<ul>
+<li>mid of 2018 <a href="https://blog.golang.org/go1.11">Go 1.11</a> introduced experimental support for the new <em>modules</em> format</li>
+<li><code>vgo</code> = <code>go</code> tool with modules support</li>
+<li><a href="https://github.com/golang/go/issues/24476">vgo was pretty unstable</a> (<a href="https://github.com/golang/go/issues?utf8=%E2%9C%93&amp;q=is%3Aissue+is%3Aopen+vgo+x%2Fvgo%3A">350+ issues</a>)</li>
+</ul>
+</section>
+<section id="terminology" class="slide level1">
+<h1>Terminology</h1>
 <ul>
 <li>a repository contains one or more modules</li>
 <li>a module contains one or more packages</li>
@@ -200,7 +205,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a>$ <span class="ex">go</span> mod init github.com/example/project</span></code></pre></div>
 <ul>
-<li>migrates existing dependency definitions if present (e.g. <code>Gopkt.toml</code>)</li>
+<li>migrates existing dependency definitions if present (e.g. <code>Gopkg.toml</code> from <code>dep</code>)</li>
 <li>creates <code>go.mod</code> and <code>go.sum</code> files</li>
 </ul>
 <p>Commit both but never edit them manually!</p>
@@ -216,12 +221,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="go-modules-proxy" class="slide level1">
 <h1>Go Modules Proxy</h1>
 <ul>
-<li>introduced with Go 1.13 (<a href="https://blog.golang.org/modules2019">deprecate GOPATH</a>)</li>
-<li>default one is <a href="https://proxy.golang.org">proxy.golang.org</a> (not open-source)</li>
-<li>package checksums (<code>go.sum</code>) are checked by default against <a href="https://sum.golang.org.">sum.golang.org</a></li>
+<li>introduced with Go 1.13</li>
+<li>default one is <a href="https://proxy.golang.org">proxy.golang.org</a> (<a href="https://youtu.be/kqMxaO9d1NM?t=2214">not open-source</a>)</li>
+<li>package checksums (<code>go.sum</code>) are validated against <a href="https://sum.golang.org.">sum.golang.org</a> by default</li>
+<li>Go 1.13 started to <a href="https://blog.golang.org/modules2019">deprecate GOPATH</a></li>
 </ul>
 </section>
-<section id="section-1" class="slide level1">
+<section id="section-1" class="slide level1" data-background-image="https://images.unsplash.com/photo-1461685265823-f8d5d0b08b9b?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=2700&amp;q=80" data-background-opacity="0.31415">
 <h1>🕵️</h1>
 <ul>
 <li>potential information leak</li>
@@ -243,7 +249,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><a href="https://gocenter.io/">gocenter.io</a> (JFrog, commercial)</li>
 <li><a href="https://goproxy.cn/">goproxy.cn</a> (open source, trustworthy!?)</li>
-<li><a href="https://github.com/gomods/athens">Athens</a> (open source, pretty mature, Microsoft)</li>
+<li><a href="https://github.com/gomods/athens">Athens</a> (open source, most mature project)</li>
 <li>…</li>
 </ul>
 </section>
@@ -293,10 +299,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h4 id="goproxymodulevversion.info"><code>$GOPROXY/&lt;module&gt;/@v/&lt;version&gt;.info</code></h4>
 <ul>
-<li>returns version details mod time</li>
+<li>returns version details and date of creation</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1"></a>$ <span class="ex">curl</span> <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.info&#39;</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="dt">{&quot;Version&quot;:&quot;v1.7.0&quot;,&quot;Time&quot;:&quot;2019-01-25T16:05:53Z&quot;}</span></span></code></pre></div>
+</section>
+<section class="slide level1">
+
+<h4 id="goproxymodulelatest"><code>$GOPROXY/&lt;module&gt;/@latest</code></h4>
+<ul>
+<li>not documented in <code>go help goproxy</code></li>
+<li>returns details of the latest available version</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a>$ <span class="ex">curl</span> <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@latest&#39;</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="dt">{&quot;Version&quot;:&quot;v1.7.3&quot;,&quot;Time&quot;:&quot;2019-06-30T04:17:52Z&quot;}</span></span></code></pre></div>
 </section>
 <section class="slide level1">
 
@@ -304,8 +320,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li>the module’s <code>go.mod</code> file</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a><span class="ex">curl</span> -s <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.mod&#39;</span> <span class="kw">|</span> <span class="fu">head</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="ex">module</span> github.com/gorilla/mux</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a>$ <span class="ex">curl</span> -s <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.mod&#39;</span> <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="ex">module</span> github.com/gorilla/mux</span></code></pre></div>
 </section>
 <section class="slide level1">
 
@@ -313,24 +329,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li>zip archive of the module at <code>&lt;version&gt;</code></li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a>$ <span class="ex">curl</span> -s <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.zip&#39;</span> <span class="kw">|</span> <span class="ex">bsdtar</span> --list -zf- <span class="kw">|</span> <span class="fu">head</span> -n10</span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.github/release-drafter.yml</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.github/stale.yml</span></span>
-<span id="cb7-4"><a href="#cb7-4"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.travis.yml</span></span>
-<span id="cb7-5"><a href="#cb7-5"></a><span class="ex">github.com/gorilla/mux@v1.7.0/AUTHORS</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a><span class="ex">github.com/gorilla/mux@v1.7.0/ISSUE_TEMPLATE.md</span></span>
-<span id="cb7-7"><a href="#cb7-7"></a><span class="ex">github.com/gorilla/mux@v1.7.0/LICENSE</span></span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="ex">github.com/gorilla/mux@v1.7.0/README.md</span></span>
-<span id="cb7-9"><a href="#cb7-9"></a><span class="ex">github.com/gorilla/mux@v1.7.0/bench_test.go</span></span>
-<span id="cb7-10"><a href="#cb7-10"></a><span class="ex">github.com/gorilla/mux@v1.7.0/context.go</span></span>
-<span id="cb7-11"><a href="#cb7-11"></a><span class="ex">github.com/gorilla/mux@v1.7.0/context_test.go</span></span>
-<span id="cb7-12"><a href="#cb7-12"></a>…</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1"></a>$ <span class="ex">curl</span> -s <span class="st">&#39;https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.zip&#39;</span> <span class="kw">|</span> <span class="ex">bsdtar</span> --list -zf- <span class="kw">|</span> <span class="fu">head</span> -n10</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.github/release-drafter.yml</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.github/stale.yml</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a><span class="ex">github.com/gorilla/mux@v1.7.0/.travis.yml</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a><span class="ex">github.com/gorilla/mux@v1.7.0/AUTHORS</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a><span class="ex">github.com/gorilla/mux@v1.7.0/ISSUE_TEMPLATE.md</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="ex">github.com/gorilla/mux@v1.7.0/LICENSE</span></span>
+<span id="cb8-8"><a href="#cb8-8"></a><span class="ex">github.com/gorilla/mux@v1.7.0/README.md</span></span>
+<span id="cb8-9"><a href="#cb8-9"></a><span class="ex">github.com/gorilla/mux@v1.7.0/bench_test.go</span></span>
+<span id="cb8-10"><a href="#cb8-10"></a><span class="ex">github.com/gorilla/mux@v1.7.0/context.go</span></span>
+<span id="cb8-11"><a href="#cb8-11"></a><span class="ex">github.com/gorilla/mux@v1.7.0/context_test.go</span></span>
+<span id="cb8-12"><a href="#cb8-12"></a>…</span></code></pre></div>
 </section>
 <section id="the-zip-archive" class="slide level1">
 <h1>The Zip Archive</h1>
 <ul>
-<li><a href="https://github.com/golang/go/issues/34953">is pretty special</a></li>
-<li>it contains no metadata:
+<li><p><a href="https://github.com/golang/go/issues/34953">is pretty special</a></p></li>
+<li><p>root folder must be:</p>
+<p><code>&lt;import-path&gt;@&lt;version&gt;/</code></p></li>
+<li><p>it contains no metadata:</p>
 <ul>
 <li>modification timestamps are DOS zero time (1979-11-30)</li>
 <li>everything has <code>0644</code> permissions</li>
@@ -358,10 +376,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2 id="should-i-write-one-myself">Should I Write one Myself?</h2>
 <div>
 <ul>
-<li class="fragment">Yes!</li>
-<li class="fragment">and No!</li>
+<li class="fragment">For learning, yes!</li>
+<li class="fragment">For production, maybe?</li>
+<li class="fragment">documentation is still unfinished and all over the place</li>
+<li class="fragment">if a project is not using semantic versioning the API falls back to <a href="https://tip.golang.org/cmd/go/#hdr-Pseudo_versions">pseudo-versions</a>:</li>
 </ul>
 </div>
+</section>
+<section id="pseudo-version" class="slide level1">
+<h1>Pseudo-Version</h1>
+<ul>
+<li>Example: <code>v0.0.0-20191025081138-a37363377ac6</code></li>
+<li>uses a custom date format <code>20060102150405</code> 😐</li>
+</ul>
+</section>
+<section id="pseudo-version-formatpseudoversion" class="slide level1">
+<h1>Pseudo Version <a href="https://tip.golang.org/cmd/go/#hdr-Pseudo_versions">Format</a>:</h1>
+<ul>
+<li><code>vX.0.0-yyyymmddhhmmss-abcdefabcdef</code></li>
+<li><code>vX.Y.Z-pre.0.yyyymmddhhmmss-abcdefabcdef</code></li>
+<li><code>vX.Y.(Z+1)-0.yyyymmddhhmmss-abcdefabcdef</code></li>
+</ul>
+<p>Not much fun to handle them.</p>
 </section>
 <section id="further-reading" class="slide level1">
 <h1>Further Reading</h1>
