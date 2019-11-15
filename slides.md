@@ -114,9 +114,9 @@ $ go get github.com/example/project@v1.2.3
 
 # Go Modules Proxy
 
-- introduced with Go 1.13
+- introduced with Go 1.13 ([deprecate GOPATH][gomodules2019])
 - default one is [proxy.golang.org][proxygolang] (not open-source)
-- package hashsums (`go.sum`) are checked by default against [sum.golang.org][sumdatabase]
+- package checksums (`go.sum`) are checked by default against [sum.golang.org][sumdatabase]
 
 # 🕵️
 
@@ -159,6 +159,10 @@ $ git config --global url."git@git.company.com:".insteadOf https://git.company.c
 
 - `go help goproxy`
 - only `GET` resources
+
+---
+
+![module proxy protocol](https://blog.golang.org/module-mirror-launch/proxy-protocol.png)
 
 ---
 
@@ -229,7 +233,7 @@ github.com/gorilla/mux@v1.7.0/context_test.go
 
 - very hard to reproduce
 - only achieved archives with equal byte length (compared to proxy.golang.org)
-- hashums were still different (official zips used weird file metadata)
+- checksums were still different (official zips used weird file metadata)
 
 # But…
 
@@ -248,7 +252,25 @@ github.com/gorilla/mux@v1.7.0/context_test.go
 
 :::
 
-# Questions?
+# Further Reading
+
+- [Katie Hockman - Go Module Proxy: Life of a Query][katiehockmangolab]
+	This talk goes into a bit more detail and explains how the checksum database works (Merkel-Trees, …)
+- [Go Modules in 2019][gomodules2019]
+- [Go Modules Documentation][gomodulesdoc]
+- [proxy.golang.org][proxygolangorg]
+
+# Questions? { data-background-video=https://media.giphy.com/media/l0Iy8hSJalxmgTOF2/giphy.mp4 data-background-video-loop=loop data-background-opacity=0.31415 }
+
+# Summary
+
+A module proxy gives you:
+
+- faster builds
+- reproducible builds
+- persistent dependencies
+
+Additionally, the checksum database eliminiates MITM modification of modules.
 
 [go15]: https://go.googlesource.com/proposal/+/master/design/25719-go15vendor.md
 [go2017survey]: https://blog.golang.org/survey2017-results
@@ -264,3 +286,7 @@ github.com/gorilla/mux@v1.7.0/context_test.go
 [gomodzipissue]: https://github.com/golang/go/issues/34953
 [athens-pacmod]: https://github.com/gomods/athens/pull/1414
 [pacmod]: https://github.com/plexsystems/pacmod
+[katiehockmangolab]: https://www.youtube.com/watch?v=kqMxaO9d1NM
+[gomodules2019]: https://blog.golang.org/modules2019
+[gomodulesdoc]: https://golang.org/doc/go1.13#modules
+[proxygolangorg]: https://proxy.golang.org/
