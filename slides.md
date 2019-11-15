@@ -5,7 +5,7 @@ author: Andreas Linz—klingt.net
 date: 2019-11-14T19+01:00
 ---
 
-# A short History
+# A short History { data-background-image=https://images.unsplash.com/photo-1458040937381-49c067dfd49a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80 data-background-opacity=0.31415 }
 
 # `$GOPATH/src`
 
@@ -33,9 +33,9 @@ The top three major challenges we identified are:
 **Package management** (e.g., "Keeping up with vendoring", "dependency / packet [sic] management / vendoring not unified")
 …
 
-# 🤔
+# 🤔 { data-background-video=https://media.giphy.com/media/2H67VmB5UEBmU/giphy.mp4 data-background-video-loop=loop data-background-opacity=0.31415 }
 
-# Era of Package Managers
+# Era of Package Managers { data-background-image=https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80 data-background-opacity=0.31415 }
 
 ---
 
@@ -67,7 +67,7 @@ In my experience, many newcomers to Go are **frustrated with the single workspac
 
 With the end of 2016 a [default `GOPATH`][defaultgopath] is set (`~/go`).
 
-# GO111MODULES=on
+# GO111MODULES=on { data-background-image=https://images.unsplash.com/photo-1517373116369-9bdb8cdc9f62?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80 data-background-opacity=0.31415 }
 
 ---
 
