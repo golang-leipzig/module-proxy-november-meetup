@@ -105,7 +105,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <p class="date">2019-11-14T19+01:00</p>
 </section>
 
-<section id="a-short-history" class="slide level1">
+<section id="a-short-history" class="slide level1" data-background-image="https://images.unsplash.com/photo-1458040937381-49c067dfd49a?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1650&amp;q=80" data-background-opacity="0.31415">
 <h1>A short History</h1>
 </section>
 <section id="gopathsrc" class="slide level1">
@@ -134,10 +134,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The top three major challenges we identified are:</p>
 <p><strong>Package management</strong> (e.g., “Keeping up with vendoring”, “dependency / packet [sic] management / vendoring not unified”) …</p>
 </section>
-<section id="section" class="slide level1">
+<section id="section" class="slide level1" data-background-video="https://media.giphy.com/media/2H67VmB5UEBmU/giphy.mp4" data-background-video-loop="loop" data-background-opacity="0.31415">
 <h1>🤔</h1>
 </section>
-<section id="era-of-package-managers" class="slide level1">
+<section id="era-of-package-managers" class="slide level1" data-background-image="https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1650&amp;q=80" data-background-opacity="0.31415">
 <h1>Era of Package Managers</h1>
 </section>
 <section class="slide level1">
@@ -169,7 +169,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>In my experience, many newcomers to Go are <strong>frustrated with the single workspace $GOPATH model.</strong></p>
 <p>With the end of 2016 a <a href="https://github.com/golang/go/issues/17262">default <code>GOPATH</code></a> is set (<code>~/go</code>).</p>
 </section>
-<section id="go111moduleson" class="slide level1">
+<section id="go111moduleson" class="slide level1" data-background-image="https://images.unsplash.com/photo-1517373116369-9bdb8cdc9f62?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=crop&amp;w=1950&amp;q=80" data-background-opacity="0.31415">
 <h1>GO111MODULES=on</h1>
 </section>
 <section class="slide level1">
@@ -216,9 +216,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="go-modules-proxy" class="slide level1">
 <h1>Go Modules Proxy</h1>
 <ul>
-<li>introduced with Go 1.13</li>
+<li>introduced with Go 1.13 (<a href="https://blog.golang.org/modules2019">deprecate GOPATH</a>)</li>
 <li>default one is <a href="https://proxy.golang.org">proxy.golang.org</a> (not open-source)</li>
-<li>package hashsums (<code>go.sum</code>) are checked by default against <a href="https://sum.golang.org.">sum.golang.org</a></li>
+<li>package checksums (<code>go.sum</code>) are checked by default against <a href="https://sum.golang.org.">sum.golang.org</a></li>
 </ul>
 </section>
 <section id="section-1" class="slide level1">
@@ -269,6 +269,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>go help goproxy</code></li>
 <li>only <code>GET</code> resources</li>
 </ul>
+</section>
+<section class="slide level1">
+
+<figure>
+<img data-src="https://blog.golang.org/module-mirror-launch/proxy-protocol.png" alt="" /><figcaption>module proxy protocol</figcaption>
+</figure>
 </section>
 <section class="slide level1">
 
@@ -336,7 +342,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li>very hard to reproduce</li>
 <li>only achieved archives with equal byte length (compared to proxy.golang.org)</li>
-<li>hashums were still different (official zips used weird file metadata)</li>
+<li>checksums were still different (official zips used weird file metadata)</li>
 </ul>
 </section>
 <section id="but" class="slide level1">
@@ -357,8 +363,27 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 </div>
 </section>
-<section id="questions" class="slide level1">
+<section id="further-reading" class="slide level1">
+<h1>Further Reading</h1>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=kqMxaO9d1NM">Katie Hockman - Go Module Proxy: Life of a Query</a> This talk goes into a bit more detail and explains how the checksum database works (Merkel-Trees, …)</li>
+<li><a href="https://blog.golang.org/modules2019">Go Modules in 2019</a></li>
+<li><a href="https://golang.org/doc/go1.13#modules">Go Modules Documentation</a></li>
+<li><a href="https://proxy.golang.org/">proxy.golang.org</a></li>
+</ul>
+</section>
+<section id="questions" class="slide level1" data-background-video="https://media.giphy.com/media/l0Iy8hSJalxmgTOF2/giphy.mp4" data-background-video-loop="loop" data-background-opacity="0.31415">
 <h1>Questions?</h1>
+</section>
+<section id="summary" class="slide level1">
+<h1>Summary</h1>
+<p>A module proxy gives you:</p>
+<ul>
+<li>faster builds</li>
+<li>reproducible builds</li>
+<li>persistent dependencies</li>
+</ul>
+<p>Additionally, the checksum database eliminiates MITM modification of modules.</p>
 </section>
     </div>
   </div>
