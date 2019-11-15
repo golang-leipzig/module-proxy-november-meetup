@@ -1,6 +1,6 @@
 ---
 title: Go Module Proxy
-subtitle: Internals and pitfalls to consider when developing one yourself
+subtitle: Internals and Pitfalls
 author: Andreas Linz—klingt.net
 date: 2019-11-14T19+01:00
 ---
@@ -13,7 +13,7 @@ date: 2019-11-14T19+01:00
 
 # `GO15VENDOREXPERIMENT=on`
 
-- [Go 1.5][go15] introduced experimental `/vendor` support
+- In mid of 2015 [Go 1.5][go15] introduced experimental `/vendor` support
 - `/vendor` supplies manual managed dependencies
 - **dependencies need to be part of the repository**
 - (nobody likes to work with git submodules, `git clone --recursive ...`)
@@ -28,7 +28,7 @@ When asked about the biggest challenges to their own personal use of Go, users c
 
 ### [Go 2018 Survey Results][go2018survey]:
 
-The top three major challenges we identified are:
+[One of] The top three major challenges we identified are:
 
 **Package management** (e.g., "Keeping up with vendoring", "dependency / packet [sic] management / vendoring not unified")
 …
@@ -56,7 +56,7 @@ The top three major challenges we identified are:
 ---
 
 - many Go developers were unhappy with package management
-- no official solution, only more or less stable external tools
+- no official solution, only more or less stable third-party package management tools
 - you still needed to work inside the `$GOPATH` (or use "clever" hacks)
 
 ---
@@ -69,21 +69,22 @@ With the end of 2016 a [default `GOPATH`][defaultgopath] is set (`~/go`).
 
 # GO111MODULES=on { data-background-image=https://images.unsplash.com/photo-1517373116369-9bdb8cdc9f62?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80 data-background-opacity=0.31415 }
 
----
+# What's a Module?
 
-::: incremental
-
-- mid of 2018 [Go 1.11][go111] introduced experimental support for the new _modules_ format (`vgo`)
-- [vgo was pretty unstable][vgoissue]
 - **module**: collection of related Go packages that are versioned together as single unit
-- precise dependency requirements → **reproducible builds**
-- finalized with the next release, i.e. Go 1.14
-
-:::
+- e.g. a simple webserver using `net/http` from Go 1.1x with `gorilla/mux` as router is a collection of packages
+- modules add precise dependency requirements (`go.mod`) → **reproducible builds**
+- support will be finalized with Go 1.14
 
 [Modules documentation][modulesdocumentation]
 
-# Modules?
+# `vgo`
+
+- mid of 2018 [Go 1.11][go111] introduced experimental support for the new _modules_ format
+- `vgo` = `go` tool with modules support
+- [vgo was pretty unstable][vgoissue] ([350+ issues](https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+vgo+x%2Fvgo%3A))
+
+# Terminology
 
 - a repository contains one or more modules
 - a module contains one or more packages
@@ -97,7 +98,7 @@ With the end of 2016 a [default `GOPATH`][defaultgopath] is set (`~/go`).
 $ go mod init github.com/example/project
 ```
 
-- migrates existing dependency definitions if present (e.g. `Gopkt.toml`)
+- migrates existing dependency definitions if present (e.g. `Gopkg.toml` from `dep`)
 - creates `go.mod` and `go.sum` files
 
 Commit both but never edit them manually!
@@ -114,11 +115,12 @@ $ go get github.com/example/project@v1.2.3
 
 # Go Modules Proxy
 
-- introduced with Go 1.13 ([deprecate GOPATH][gomodules2019])
-- default one is [proxy.golang.org][proxygolang] (not open-source)
-- package checksums (`go.sum`) are checked by default against [sum.golang.org][sumdatabase]
+- introduced with Go 1.13
+- default one is [proxy.golang.org][proxygolang] ([not open-source](https://youtu.be/kqMxaO9d1NM?t=2214))
+- package checksums (`go.sum`) are validated against [sum.golang.org][sumdatabase] by default
+- Go 1.13 started to [deprecate GOPATH][gomodules2019]
 
-# 🕵️
+# 🕵️ { data-background-image=https://images.unsplash.com/photo-1461685265823-f8d5d0b08b9b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2700&q=80 data-background-opacity=0.31415 }
 
 - potential information leak
 - set `GOPRIVATE=my.secret.git.com[,…]` for private repositories
@@ -137,7 +139,7 @@ $ go get github.com/example/project@v1.2.3
 
 - [gocenter.io](https://gocenter.io/) (JFrog, commercial)
 - [goproxy.cn](https://goproxy.cn/) (open source, trustworthy!?)
-- [Athens](https://github.com/gomods/athens) (open source, pretty mature, Microsoft)
+- [Athens](https://github.com/gomods/athens) (open source, most mature project)
 - …
 
 # Write ony Yourself?
@@ -183,11 +185,23 @@ v1.6.0
 
 #### `$GOPROXY/<module>/@v/<version>.info`
 
-- returns version details mod time
+- returns version details and date of creation
 
 ```sh
 $ curl 'https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.info'
 {"Version":"v1.7.0","Time":"2019-01-25T16:05:53Z"}
+```
+
+---
+
+#### `$GOPROXY/<module>/@latest`
+
+- not documented in `go help goproxy`
+- returns details of the latest available version
+
+```sh
+$ curl 'https://proxy.golang.org/github.com/gorilla/mux/@latest'
+{"Version":"v1.7.3","Time":"2019-06-30T04:17:52Z"}
 ```
 
 ---
@@ -197,7 +211,7 @@ $ curl 'https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.info'
 - the module's `go.mod` file
 
 ```sh
-curl -s 'https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.mod' | head
+$ curl -s 'https://proxy.golang.org/github.com/gorilla/mux/@v/v1.7.0.mod' | head
 module github.com/gorilla/mux
 ```
 
@@ -225,6 +239,9 @@ github.com/gorilla/mux@v1.7.0/context_test.go
 # The Zip Archive
 
 - [is pretty special][gomodzipissue]
+- root folder must be:
+	
+	`<import-path>@<version>/`
 - it contains no metadata:
 	- modification timestamps are DOS zero time (1979-11-30)
 	- everything has `0644` permissions
@@ -247,10 +264,26 @@ github.com/gorilla/mux@v1.7.0/context_test.go
 
 ::: incremental
 
-- Yes!
-- and No!
+- For learning, yes!
+- For production, maybe?
+- documentation is still unfinished and all over the place
+- if a project is not using semantic versioning the API falls back to [pseudo-versions][pseudoversion]:
 
 :::
+
+# Pseudo-Version
+
+- Example: `v0.0.0-20191025081138-a37363377ac6`
+- uses a custom date format `20060102150405` 😐
+
+
+# Pseudo Version [Format][pseudoversion]:
+
+- `vX.0.0-yyyymmddhhmmss-abcdefabcdef`
+- `vX.Y.Z-pre.0.yyyymmddhhmmss-abcdefabcdef`
+- `vX.Y.(Z+1)-0.yyyymmddhhmmss-abcdefabcdef`
+
+Not much fun to handle them.
 
 # Further Reading
 
@@ -290,3 +323,4 @@ Additionally, the checksum database eliminiates MITM modification of modules.
 [gomodules2019]: https://blog.golang.org/modules2019
 [gomodulesdoc]: https://golang.org/doc/go1.13#modules
 [proxygolangorg]: https://proxy.golang.org/
+[pseudoversion]: https://tip.golang.org/cmd/go/#hdr-Pseudo_versions
